@@ -62,7 +62,8 @@ namespace DrWeb { namespace RemoteRunner { namespace Core { namespace Net {
 			return true;
 		}
 		
-		_proxy.reset();
+		_connection.reset();
+		_proxy.reset();		
 		
 		return false;
 	}
