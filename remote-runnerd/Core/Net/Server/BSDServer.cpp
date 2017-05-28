@@ -103,6 +103,17 @@ namespace DrWeb { namespace RemoteRunner { namespace Core { namespace Net {
 							LogRegister<Net::Log>::Error("Server > Could not register the kevent in the eventlist: ", strerror(errno));
 						}
 					}
+					
+					/// @todo После очередной проверки — проверим соединение еще раз через 50000ms (брать из конфига)
+					EV_SET(&event_template[0], event_list[e].ident, EVFILT_TIMER, EV_ADD | EV_ONESHOT, 0, 50000, iterator);
+					if (kevent(kq, event_template, 1, NULL, 0, NULL) < 0) {
+						/// Удаляем из пула
+						if (!reject(*iterator)) {
+							LogRegister<Net::Log>::Error("Server > Couldn't find connection(", event_list[e].ident, ") in the poll");
+						}
+						delete iterator;
+						LogRegister<Net::Log>::Error("Server > Could not register the kevent in the eventlist: ", strerror(errno));
+					}
 
 					continue;
 				}
