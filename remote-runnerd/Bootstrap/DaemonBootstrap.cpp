@@ -92,7 +92,7 @@ namespace DrWeb { namespace RemoteRunner {
 				telnet_server.reset(new Core::Net::TelnetServer(wand::make_unique<Core::Net::ServerSocket>(wand::make_unique<Core::Net::InetSocketAddress>(preference.getTelnetServerSocketAddress().getHost(), preference.getTelnetServerSocketAddress().getPort())), launcher));
 				break;
 			case Core::System::SocketAddressOption::SocketFamily::Unix:
-				telnet_server.reset(new Core::Net::TelnetServer(wand::make_unique<Core::Net::ServerSocket>(wand::make_unique<Core::Net::UnixSocketAddress>(preference.getTelnetServerSocketAddress().getPath())), launcher));
+				telnet_server.reset(new Core::Net::TelnetServer(wand::make_unique<Core::Net::ServerSocket>(wand::make_unique<Core::Net::UnixSocketAddress>("/" + preference.getTelnetServerSocketAddress().getPath())), launcher));
 				break;
 			default:
 				syslog(LOG_ERR, "TelnetServer cannot be initialized with specified option");
