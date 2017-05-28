@@ -19,6 +19,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <signal.h>
+#include <syslog.h>
 
 enum class BootstrapMode : std::uint8_t {
 	Daemon = 'd',
@@ -135,35 +136,42 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	openlog(argv[0], LOG_PID, LOG_DAEMON);
+	
 	/// @note Определяем загрузчик
 	switch (bootstrap_mode) {
 		case BootstrapMode::Daemon:
-			bootstrap.reset(new DrWeb::RemoteRunner::DaemonBootstrap(argv[0], configuration_stream, std::cout, std::cerr));
+			bootstrap.reset(new DrWeb::RemoteRunner::DaemonBootstrap(argv[0], configuration_stream));
 			break;
 /*
 		case BootstrapMode::Test:
-			bootstrap.reset(new DrWeb::RemoteRunner::TestBootstrap(argv[0], configuration_stream, std::cout, std::cerr));
+			bootstrap.reset(new DrWeb::RemoteRunner::TestBootstrap(argv[0], configuration_stream));
 			break;
 
 		case BootstrapMode::Version:
-			bootstrap.reset(new DrWeb::RemoteRunner::VersionBootstrap(argv[0], configuration_stream, std::cout, std::cerr));
+			bootstrap.reset(new DrWeb::RemoteRunner::VersionBootstrap(argv[0], configuration_stream));
 			break;
 
 		case BootstrapMode::Test
-			bootstrap.reset(new DrWeb::RemoteRunner::HelpBootstrap(argv[0], configuration_stream, std::cout, std::cerr));
+			bootstrap.reset(new DrWeb::RemoteRunner::HelpBootstrap(argv[0], configuration_stream));
 			break;
 */
 		default:
+			syslog(LOG_ALERT, "Unsupported bootstrap mode = %c", static_cast<char>(bootstrap_mode));
+			
 			return EXIT_FAILURE;
 	}
 
 	/// @note Запускаем
 	try {
-		return bootstrap->run() ? EXIT_SUCCESS : EXIT_FAILURE;
+		int retcode = bootstrap->run();
+		closelog();
+		
+		return retcode ? EXIT_SUCCESS : EXIT_FAILURE;
 	} catch (std::exception const &e) {
-		std::cerr << argv[0] << ": Stopped abnormally with unexpected exception (" << e.what() << ")" << std::endl;
+		syslog(LOG_CRIT, "Stopped abnormally with unexpected exception: %s", e.what());
+		closelog();
+		
 		return EXIT_FAILURE;
 	}
-
-	return EXIT_SUCCESS;
 }

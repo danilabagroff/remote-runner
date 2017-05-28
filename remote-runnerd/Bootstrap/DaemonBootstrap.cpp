@@ -24,9 +24,9 @@
 #include "../Wand/AsyncThen.hpp"
 
 namespace DrWeb { namespace RemoteRunner {
-	DaemonBootstrap::DaemonBootstrap(const std::string name, std::fstream& configuration_stream, std::ostream& out_stream, std::ostream& error_stream)
+	DaemonBootstrap::DaemonBootstrap(const std::string name, std::fstream& configuration_stream)
 	:
-		AbstractBootstrap(name, configuration_stream, out_stream, error_stream)
+		AbstractBootstrap(name, configuration_stream)
 	{
 		/// @note Запускаем отдельный поток и задаем его каждому регистратору
 		std::shared_ptr<wand::worker_thread> worker(wand::worker_thread::instance());
@@ -58,13 +58,12 @@ namespace DrWeb { namespace RemoteRunner {
 		}
 		
 		Core::System::Preference preference;
-		
-		_out_stream << getName() << ": Daemon configuration... ";
+
 		if (!_configuration.load(preference)) {
-			_out_stream << "Fault." << std::endl;
+			syslog(LOG_ERR, "Unexpected configuration fault");
+			
 			return false;
 		}
-		_out_stream << "Loaded." << std::endl;
 		
 		/// @xxx А почему мы считаем, что пути файлов всегда заданы?
 		_systemlog_stream.open(preference.getSystemLogFile().getPath(), std::ofstream::out | std::ofstream::ate);
@@ -96,7 +95,8 @@ namespace DrWeb { namespace RemoteRunner {
 				telnet_server.reset(new Core::Net::TelnetServer(wand::make_unique<Core::Net::ServerSocket>(wand::make_unique<Core::Net::UnixSocketAddress>(preference.getTelnetServerSocketAddress().getPath())), launcher));
 				break;
 			default:
-				_error_stream << getName() << ": TelnetServer cannot be initialized with specified option" << std::endl;
+				syslog(LOG_ERR, "TelnetServer cannot be initialized with specified option");
+
 				return false;
 				break;
 		}

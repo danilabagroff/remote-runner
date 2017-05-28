@@ -14,6 +14,7 @@
 #include <map>
 #include <memory>
 #include <fstream>
+#include <syslog.h>
 
 namespace DrWeb { namespace RemoteRunner {
 	class AbstractBootstrap
@@ -21,7 +22,7 @@ namespace DrWeb { namespace RemoteRunner {
 	/** @name Constructors */
 	/** @{ */
 	public:
-		AbstractBootstrap(const std::string name, std::fstream& configuration_stream, std::ostream& out_stream, std::ostream& error_stream);
+		AbstractBootstrap(const std::string name, std::fstream& configuration_stream);
 		virtual ~AbstractBootstrap();
 	/** @} */
 		
@@ -30,9 +31,6 @@ namespace DrWeb { namespace RemoteRunner {
 	protected:
 		const std::string _name;
 		Configuration _configuration;
-
-		std::ostream& _out_stream;
-		std::ostream& _error_stream;
 	/** @} */
 
 	/** @name Factories */

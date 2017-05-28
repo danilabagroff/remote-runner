@@ -26,7 +26,7 @@ namespace DrWeb { namespace RemoteRunner {
 	/** @name Constructors */
 	/** @{ */
 	public:
-		DaemonBootstrap(const std::string name, std::fstream& configuration_stream, std::ostream& out_stream, std::ostream& error_stream);
+		DaemonBootstrap(const std::string name, std::fstream& configuration_stream);
 		virtual ~DaemonBootstrap();
 	/** @} */
 		

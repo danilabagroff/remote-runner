@@ -10,12 +10,10 @@
 #include "Build.hpp"
 
 namespace DrWeb { namespace RemoteRunner {
-	AbstractBootstrap::AbstractBootstrap(const std::string name, std::fstream& configuration_stream, std::ostream& out_stream, std::ostream& error_stream)
+	AbstractBootstrap::AbstractBootstrap(const std::string name, std::fstream& configuration_stream)
 	:
 		_name(name),
-		_configuration(configuration_stream),
-		_out_stream(out_stream),
-		_error_stream(error_stream)
+		_configuration(configuration_stream)
 	{
 	}
 	
@@ -28,7 +26,8 @@ namespace DrWeb { namespace RemoteRunner {
 	{
 		if (!_configuration.isOpened() && load_preference) {
 			if (!_configuration.open(Build::ConfigurationFile)) {
-				_error_stream << getName() << ": Configuration file does not exist or access is denied" << std::endl;
+				syslog(LOG_ERR, "Configuration file does not exist or access is denied");
+				
 				return false;
 			}
 		}
