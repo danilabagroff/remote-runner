@@ -15,6 +15,17 @@
 #include <utility>
 #include <memory>
 #include <string>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <signal.h>
+
+enum class BootstrapMode : std::uint8_t {
+	Daemon = 'd',
+	Test = 't',
+	Version = 'v',
+	Help = 'h'
+};
 
 int main(int argc, char* argv[])
 {
@@ -23,7 +34,13 @@ int main(int argc, char* argv[])
 	
 	/// Загрузчик
 	std::shared_ptr<DrWeb::RemoteRunner::AbstractBootstrap> bootstrap;
-	
+
+	/// Background?
+	bool background_mode(false);
+
+	/// Mode
+	BootstrapMode bootstrap_mode(BootstrapMode::Daemon);
+
 	/// Разбираемся с аргументами
 	std::string name;
 	std::string value;
@@ -51,36 +68,93 @@ int main(int argc, char* argv[])
 		}
 		
 		if (name.compare("daemon") == 0 || name.compare("d") == 0) {
-			bootstrap.reset(new DrWeb::RemoteRunner::DaemonBootstrap(argv[0], configuration_stream, std::cout, std::cerr));
+			bootstrap_mode = BootstrapMode::Daemon;
 			continue;
 		}
-		
-		/// @note Используем только один вариант загрузчика :(
-/*
+
 		if (name.compare("test") == 0 || name.compare("t") == 0) {
-			bootstrap.reset(new DrWeb::RemoteRunner::TestBootstrap(argv[0], configuration_stream, std::cout, std::cerr));
+			bootstrap_mode = BootstrapMode::Test;
 			continue;
 		}
 		
 		if (name.compare("version") == 0 || name.compare("v") == 0) {
-			bootstrap.reset(new DrWeb::RemoteRunner::VersionBootstrap(argv[0], configuration_stream, std::cout, std::cerr));
+			bootstrap_mode = BootstrapMode::Version;
 			continue;
 		}
 		
 		if (name.compare("help") == 0 || name.compare("h") == 0) {
-			bootstrap.reset(new DrWeb::RemoteRunner::HelpBootstrap(argv[0], configuration_stream, std::cout, std::cerr));
+			bootstrap_mode = BootstrapMode::Help;
 			break;
 		}
-*/
+
 		if (name.compare("config") == 0 || name.compare("c") == 0) {
 			configuration_stream.open((value[0] != '~' ? value : (std::getenv("HOME") + value.substr(1))));
 			continue;
 		}
+
+		if (name.compare("background") == 0 || name.compare("b") == 0) {
+			background_mode = true;
+			continue;
+		}
 	}
 
-	/// @note Определям дефолтный загрузчик, если он не был определен ранее
-	if (nullptr == bootstrap) {
-		bootstrap.reset(new DrWeb::RemoteRunner::DaemonBootstrap(argv[0], configuration_stream, std::cout, std::cerr));
+	/// @note Демонизируемся
+	if (background_mode) {
+		pid_t pid = fork();
+
+		if (pid < 0) {
+			std::cerr << argv[0] << ": Couldn't switch to background: " << strerror(errno) << std::endl;
+
+			exit(EXIT_FAILURE);
+		} else if (0 == pid) {
+			/// @note Новый сенас
+			if (setsid() < 0) {
+				exit(EXIT_FAILURE);
+			}
+
+			signal(SIGHUP, SIG_IGN);
+
+			pid = fork();
+			if (pid < 0) {
+				exit(EXIT_FAILURE);
+			} else if (pid > 0) {
+				_exit(EXIT_SUCCESS);
+			}
+
+			chdir("/tmp");
+
+			/// @note Больше нет
+			close(STDOUT_FILENO);
+			close(STDIN_FILENO);
+			close(STDERR_FILENO);
+		} else {
+			std::cerr << argv[0] << ": Switch to background" << std::endl;
+
+			/// @note родительский процесс завершаем
+			_exit(EXIT_SUCCESS);
+		}
+	}
+
+	/// @note Определяем загрузчик
+	switch (bootstrap_mode) {
+		case BootstrapMode::Daemon:
+			bootstrap.reset(new DrWeb::RemoteRunner::DaemonBootstrap(argv[0], configuration_stream, std::cout, std::cerr));
+			break;
+/*
+		case BootstrapMode::Test:
+			bootstrap.reset(new DrWeb::RemoteRunner::TestBootstrap(argv[0], configuration_stream, std::cout, std::cerr));
+			break;
+
+		case BootstrapMode::Version:
+			bootstrap.reset(new DrWeb::RemoteRunner::VersionBootstrap(argv[0], configuration_stream, std::cout, std::cerr));
+			break;
+
+		case BootstrapMode::Test
+			bootstrap.reset(new DrWeb::RemoteRunner::HelpBootstrap(argv[0], configuration_stream, std::cout, std::cerr));
+			break;
+*/
+		default:
+			return EXIT_FAILURE;
 	}
 
 	/// @note Запускаем
@@ -90,6 +164,6 @@ int main(int argc, char* argv[])
 		std::cerr << argv[0] << ": Stopped abnormally with unexpected exception (" << e.what() << ")" << std::endl;
 		return EXIT_FAILURE;
 	}
-	
+
 	return EXIT_SUCCESS;
 }
