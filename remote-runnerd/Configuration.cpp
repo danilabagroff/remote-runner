@@ -26,7 +26,7 @@ namespace DrWeb { namespace RemoteRunner {
 			return false;
 		}
 		
-		_stream.open(filename);
+		_stream.open(filename, std::ios_base::in);
 		
 		return isOpened();
 	}
