@@ -35,6 +35,8 @@ namespace DrWeb { namespace RemoteRunner { namespace Core { namespace Net {
 			return false;
 		}
 		
+		_address->clear();
+		
 		if (bind(_handle, _address->getPointer(), _address->getSize()) == -1) {
 			_last_error = errno;
 			return false;

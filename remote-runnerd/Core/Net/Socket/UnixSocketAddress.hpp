@@ -49,7 +49,7 @@ namespace DrWeb { namespace RemoteRunner { namespace Core { namespace Net {
 	/** @name Procedures  */
 	/** @{ */
 	public:
-		void clear();
+		virtual void clear() override;
 	/** @} */
 		
 	/** @name Converters */

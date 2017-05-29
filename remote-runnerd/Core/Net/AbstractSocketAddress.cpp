@@ -8,6 +8,8 @@
 #include "AbstractSocketAddress.hpp"
 
 namespace DrWeb { namespace RemoteRunner { namespace Core { namespace Net {
-	
-	
+	void AbstractSocketAddress::clear()
+	{
+		
+	}
 } } } }
