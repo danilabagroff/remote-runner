@@ -28,6 +28,10 @@
 #endif
 #elif __linux
 #include "LinuxServer.hpp"
+#elif BSD
+#include "BSDServer.hpp"
+#elif __sun
+#include "SolarisServer.hpp"
 #elif __unix // all unices not caught above
 // Unix
 #elif __posix
