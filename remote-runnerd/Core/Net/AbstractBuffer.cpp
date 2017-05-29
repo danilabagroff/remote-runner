@@ -27,13 +27,13 @@ namespace DrWeb { namespace RemoteRunner { namespace Core { namespace Net {
 		source._vector.erase(source._vector.begin(), source._vector.begin() + useful_data);
 
 		// Запоминаем положение вводного/get курсора
-		std::streamsize get_offset(egptr() - gptr());
+		std::streamsize get_offset(source.egptr() - source.gptr());
 		
 		// Устанавливаем ввводные/get указатели источника "начало" и "конец" в соответствии с обрезанным буфером
 		source.setg(source._vector.data(), source._vector.data() + (useful_data > get_offset ? 0 : useful_data - get_offset), source._vector.data() + source._vector.size());
 		
 		// Запоминаем положение выводного/put курсора
-		std::streamsize put_offset(epptr() - pptr());
+		std::streamsize put_offset(source.epptr() - source.pptr());
 		
 		// Устанавливаем выводные/put указатели источника "начало" и "конец" в соответствии с обрезанным буфером
 		source.setp(source._vector.data(), source._vector.data() + source._vector.size());

@@ -40,7 +40,7 @@ namespace DrWeb { namespace RemoteRunner { namespace Core { namespace Net {
 		}
 		
 		// Длина
-		std::streamsize length_before = (pbase() - pptr());
+		std::streamsize length_before = (pptr() - pbase());
 		
 		// Поглощаем новые данные
 		std::size_t retval = AbstractBuffer::xsputn(sequence, count);
