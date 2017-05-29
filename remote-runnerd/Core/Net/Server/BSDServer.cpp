@@ -104,7 +104,7 @@ namespace DrWeb { namespace RemoteRunner { namespace Core { namespace Net {
 						}
 					}
 					
-					/// @todo После очередной проверки — проверим соединение еще раз через 50000ms (брать из конфига)
+					/// @note После очередной проверки — проверим соединение еще раз через 50000ms (брать из конфига)
 					EV_SET(&event_template[0], event_list[e].ident, EVFILT_TIMER, EV_ADD | EV_ONESHOT, 0, 50000, iterator);
 					if (kevent(kq, event_template, 1, NULL, 0, NULL) < 0) {
 						/// Удаляем из пула
